@@ -20,7 +20,7 @@ function showPortOpen() {
 	broadcast("COM","COM,OPEN")
 }
 function readSerialData(data) {
-	console.log(data);
+	//console.log(data);
 	//console.log(data.toString('hex'));
 	if (connections.length > 0) {
 		broadcast("raw",data);

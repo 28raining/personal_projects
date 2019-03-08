@@ -41,16 +41,23 @@
       <div class="pricing-plan">
         <h2 class="pricing-header">Current Range</h2>
         <!-- START OF RADIO BUTTON, find it here: https://freefrontend.com/css-radio-buttons/ https://codepen.io/dsenneff/pen/ZoLVZW -->
-        <fieldset>
+        <fieldset onchange="change_auto_r()">
           <div class="toggle">
-            <input type="radio" name="auto_ranging" id="res_auto" checked="checked" /><label for="res_auto">Auto-Range</label>
+            <input type="radio" name="auto_ranging" id="auto_range_off" checked="checked" value=0/><label for="auto_range_off">Auto-Range off</label>
+            <input type="radio" name="auto_ranging" id="auto_range_on" value=1 /><label for="auto_range_on">Auto-Range on</label>
           </div>
         </fieldset>
         <fieldset onchange="change_r()">
           <div class="toggle">
             <input type="radio" name="chose_r" id="res_1" value=0 checked="checked" /><label for="res_1">0 Ohm</label>
             <input type="radio" name="chose_r" id="res_2" value=1 /><label for="res_2">1 Ohm</label>
-            <input type="radio" name="chose_r" id="res_3" value=2 /><label for="res_3">1k Ohm</label>
+            <input type="radio" name="chose_r" id="res_3" value=2 /><label for="res_3">100 Ohm</label>
+          </div>
+        </fieldset>
+        <fieldset onchange="change_display()">
+          <div class="toggle">
+            <input type="radio" name="change_display" id="disp_1" value=0 checked="checked" /><label for="disp_1">Continue</label>
+            <input type="radio" name="change_display" id="disp_2" value=1 /><label for="disp_2">Freeze</label>
           </div>
         </fieldset>
         <!-- End of radio button -->
@@ -78,10 +85,13 @@
       
       <div class="pricing-plan">
           <h2 class="pricing-header">Y-offset</h2>
-          <input id="knob_y_offset_na" class="knob" value="0" class="pricing-img">
-          <input id="knob_y_offset_ua" class="knob" value="0" class="pricing-img">
-          <input id="knob_y_offset_ma" class="knob" value="0" class="pricing-img">
+          <input id="knob_y_offset" class="knob" value="0" class="pricing-img">
       </div>
+
+      <div class="pricing-plan">
+        <h2 class="pricing-header">X-offset</h2>
+        <input id="knob_x_offset" class="knob" value="0" class="pricing-img">
+    </div>
     
       
     </div>
