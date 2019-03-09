@@ -45,3 +45,11 @@ Nice to have
 -- Measure voltage on both the inputs too?
 -- Logic, 4 pins?
 -- Make this into a power profiler, that means it must also measure the voltage at one of the pins.
+-- Add a huge resistor divider, then buffer it into one of the arduino ADC pins. This will put a numerical value on to the screen
+
+TRIGGER METHOD
+-- Plot a single dashed line across the display, it's vertial offset can be controlled by a knob. The knob should show the exact current value of the trigger, not a relative value
+-- Add an arrow to the line to show the x-offset value, where the trigger crossing will be plotted.
+-- Depending on the value of x-offset store all data. Then when triggered it is possible to plot data from before the trigger
+-- Once triggered, the entire window is filled up and the trigger is set back into single - another trigger won't occur until the user instucts it. 
+-- Unless trigger is set to repeat, in which case after the window is filled up the trigger is re-set
