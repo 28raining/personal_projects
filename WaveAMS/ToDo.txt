@@ -1,3 +1,43 @@
+##1 - Can change phase of the sine and use gui to attenuate on X axis
+##2 - remove trash can, only allow dragging from inside the svg. It is harder to have elements being dragged outside
+##2a - show an x at top right of every brick on click or on hover
+
+#1 - make circles into radio buttons
+#2 - add vertical seperators
+#3 - add clk to timing diagram
+#4 - add x button to clk on hover and click - hover the whole row and column, allow click and then click trash
+#4 - add clk change radio buttons
+#5 - add arrow grip points for arrow
+
+#0 - Allow add new row
+#1 - Allow change row name
+1 - Add annotations on the left
+2 - Add a title
+
+Extras -
+1 - make annotations bricks red in selector 
+
+Features - 
+x and high z
+random curves
+good annotations 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+------------------ BELOW IS THE OLD TO DO LIST ----------------
+
+
 -- Stop the squashing of the canvas
 -- Add font selector for arrow font
 Move canvas to top

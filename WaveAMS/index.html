@@ -1,119 +1,91 @@
-<!DOCTYPE html><html lang="en"><head>
-<meta charset="utf-8">
+<!DOCTYPE html><html lang="en">
+<head>
+	<meta charset="utf-8">
   <meta name="author" content="Will Kelsey">
-	<meta name="description" content="Analog and Mixed Signal Timing Waveform Drawing Tool">
+	<meta name="description" content="WaveAMS - Timing Diagrams">
   <meta name="keywords" content="Timing,Diagram,Waveform,Wave,Analog,Mixed,Signal,Drawing,Tool,Online,Free,Mac,Android,IOS,Windows">
 
-  <title>Free Online Analog and Mixed Signal Timing Waveform Drawing Tool"</title>
+  <title>WaveAMS - Timing Diagrams</title>
 	
 	<!-- web template taken from here https://startbootstrap.com/template-overviews/freelancer/ -->
 
 	<!-- Custom fonts for this template -->
-<!--	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-  <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet" type="text/css">
-  <link href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic" rel="stylesheet" type="text/css">
--->
+	<!-- Use this link for fast loading in future
+	<link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet" type="text/css">
+	<!-- end of CSS sourced from online-->
+
+	<!-- This CSS is only for offline coding 	-->
+	<link href="css/montserrat.css" rel="stylesheet" type="text/css">
+	<script src="js/jquery-3.4.1.min.js"></script>
+	<script src="js/sweetalert2.all.min.js"></script>
+	<!--end of offline css-->
+
   <!-- Custom styles for this template -->
   <link href="css/freelancer.css" rel="stylesheet">
 	<link href="css/style.css" rel="stylesheet">
 	<link href="css/main.css" rel="stylesheet">
 	<link href="slider_src/nouislider.min.css" rel="stylesheet">
 
-
-	<script src="js/jquery-3.4.1.min.js"></script>
+  <!-- Custom Javascript-->
 	<script src="js/waveams.js"></script>
 	<script src="js/html2canvas.min.js"></script>
 	<script src="js/FileSaver.js"></script>
-	<script src="js/sweetalert2.all.min.js"></script>
 	<!--<script src="https://cdn.jsdelivr.net/npm/sweetalert2@7.26.29/dist/sweetalert2.all.min.js"></script>-->
 	<link href="css/toastr.min.css" rel="stylesheet"/>
 	<script src="js/toastr.min.js"></script>
 	<script src="slider_src/nouislider.min.js"></script>
 
-  </head>
+</head>
+<body id="page-top" onload="initialise();" ondragover="allowDrop(event)" ondrop="drop(event)">
 
-  <body id="page-top" onload="initialise();" ondragover="allowDrop(event)" ondrop="drop(event)">
-
-		<!-- Navigation -->
-		<nav>
-			<div class="container">
-				<div class="wdk_container">
-					Mixed Signal Timing Diagram Tool
-				</div>
-			</div>
-		</nav>
-
-		<!-- About Section -->
-		<section>
+	<!-- Navigation -->
+	<nav>
+		<div class="container">
 			<div class="wdk_container">
-				<p> Some description here </p>
+				WaveAMS - Mixed Signal Timing Diagrams
 			</div>
-		</section>
+		</div>
+	</nav>
 
-		<section>
-			<div class="wdk_container">
-				<!-- Draw the selectable digital wave options -->
-				<p>Digital:</p>
-				<canvas id="canvas_d_pos" class="brick_button" width="50" height="50" onclick="add(this.id)"></canvas>
-				<canvas id="canvas_ana_sine" class="brick_button" width="50" height="50" onclick="add(this.id)"></canvas>
-				<canvas id="canvas_d_neg" width="50" height="50"></canvas>
-				<canvas id="canvas_d_up" width="200" height="100"></canvas>
-				<canvas id="canvas_d_down" width="200" height="100"></canvas>
-				<canvas id="canvas_d_bus" width="200" height="100"></canvas>
-				<canvas id="canvas_arrow" class="brick_button" width="50" height="50" onclick="add(this.id)" width="200" height="100"></canvas>
-			</div>
-			<input type="text" id="coords" readonly />
-		</section>
+	
+	<section>
+		<!-- Introduction -->
+    <div class="wdk_container">
+      <p>An online tool allowing efficient creation of mixed-signal timing diagrams</p>
+		</div>
+		<!-- Brick Selectors -->
+		<div class="wdk_container">
+			<svg height="32" width="64" class="brick_button" id="brick_clk__0" onclick="add_brick(this.id)"></svg>
+			<svg height="32" width="64" class="brick_button" id="brick_horizontal" onclick="add_brick(this.id)"></svg>
+			<svg height="32" width="64" class="brick_button" id="brick_data_1" onclick="add_brick(this.id)"></svg>
+			<svg height="32" width="64" class="brick_button" id="brick_sine" onclick="add_brick(this.id)"></svg>
+			<svg height="32" width="64" class="brick_button" id="brick_arrow" onclick="add_brick(this.id)"></svg>
+			<svg height="32" width="64" class="brick_button" id="brick_ann_vertical" onclick="add_brick(this.id)"></svg>
+			<svg height="32" width="64" class="brick_button" id="brick_ann_horizontal" onclick="add_brick(this.id)"></svg>
+		</div>
 
-		<section>
-			<div class="wdk_container">
-				<!-- Draw the selectable digital wave options -->
-				<div id="control_panel_tabs">
-					<div class="tab" id="tab_tab_main" onclick="change_tab('tab_main')">Main Canvas</div><div class="tab" id="tab_tab_arrow"  onclick="change_tab('tab_arrow')">Arrows</div><div class="tab" id="tab_tab_brick" onclick="change_tab('tab_brick')">Bricks</div>
-				</div>
-				<div id="control_panel">
-					<div id="tab_main">
-						<p>Modify the graph properties here...</p>
-						<p onclick="addRowAbove()">Add a row above selected row</p>
-						<p onclick="addRowBelow()">Add a row below selected row</p>
-						<p onclick="deleteRow()">delete selected row</p>
-						<p onclick="undo()">undo last change</p>
-						<p onclick="download()">download</p>
-						<p onclick="html2canvas(document.getElementById('canvas_holder'),{backgroundColor:null}).then(function(canvas) {
-							//document.body.appendChild(canvas);
-							var image = canvas.toDataURL('image/png').replace('image/png', 'image/octet-stream');
-							//window.location.href = image;
-							saveAs(image, 'timing_diagram.png');
+		<div class="wdk_container">
+			<!-- The trash can -->
+			<img id="trash_can" src="images/delete.svg" onclick="clicked_trash()"/><div id="control_panel">
+			<!-- Draw the selectable digital wave options -->
+			</div><img id="trash_can" src="images/undo.svg"/><img id="trash_can" src="images/redo.svg"/>
+		</div>
+	</section>
 
-							//document.getElementById('clickme').innerHTML='<a download=time.png href='+image+'></a>'
-							//document.getElementById('clickme').click();
-							
-							//var link = document.createElement('');
-							//var link = document.createElement('a');
-							//link.download = 'timing_diagram.png';
-							//link.href = image;
-							//link.click();
+	<div class="svg_container">
+		<svg id='main_svg'></svg>
+		<img id="add_row" src="images/plus.svg" onclick="add_row()"/>
+	</div>
 
-						});">Html 2 canv</p>
-					</div>
-					<div id="tab_arrow">
-						<p>Modify arrows that were previously added</p>
-					</div>
-					<div id="tab_brick">
-						<p>Select a brick and then modify it here</p>
-					</div>
-				</div>
-			</div>
-		</section>
+	<!--this div has display none and is used for determining svg width-->
+	<div id="dummy_element">
+		<svg viewBox="0 0 200 0"> 
+			<g id="test_text"> 
+			</g>
+		</svg>
+	</div>
 
-		<section>
-			<div id="canvas_holder" onmousemove="highlight_under_hover(event)" onclick="canvas_click(event)">
-					<canvas id="main_canvas"></canvas>
-					<div id="canvas_labels">
-					</div>
-					<div id="canvas_hover_divs"></div>
-			</div>
-		</section>
+		
 			
 		
 
@@ -134,7 +106,7 @@
 			
 			<div class="container">
 				<div class="copyright">
-					Copyright &copy; Will Kelsey 2018. www.will-kelsey.com/waveams
+					--- Copyright &copy; Will Kelsey 2019 --- www.will-kelsey.com/waveams ---
 				</div>
 			</div>
 

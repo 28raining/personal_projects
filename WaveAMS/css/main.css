@@ -1,5 +1,5 @@
 .copyright{
-	font-size:0.9em;
+	font-size:1em;
 	font-weight:400;
 	color: #fff;
 	text-align:center;
@@ -8,11 +8,13 @@
 }
 
 #control_panel{
-	height:120px;
+	height:80px;
+	width : 50%;
 	background-color:#2c3e50;
-	border-bottom-left-radius: 10px;
-	border-bottom-right-radius: 10px;
-	display:block;
+	border-radius: 3px;
+	display:inline-block;
+	vertical-align: top;
+	padding:3px;
 }
 
 
@@ -50,13 +52,22 @@
 }
 .brick_button {
     color: #444444;
-    background: #17af92;
-    border: 1px #095243 solid;
-    padding: 5px 10px;
-    border-radius: 2px;
+		background: #20d0ad;
+		width:74px;
+		height:74px;
+		border: 1px #095243 solid;
+		padding-left: 4px;
+		padding-right: 4px;
+		padding-top: 19px;
+		padding-bottom: 19px;
+    margin: 10px;
+    border-radius: 1px;
     font-weight: bold;
     font-size: 9pt;
-    outline: none;
+		outline: none;
+		stroke:rgb(68, 68, 68);
+		stroke-width:2;
+		fill:none;
 }
 
 .brick_button:hover {
@@ -78,23 +89,6 @@
 	background-color:rgba(23, 175, 146,0.5);
 }
 
-#canvas_labels {
-	position: absolute;
-	top:0px;
-	left:0px;
-	height:200px;
-	width:100px;
-}
-
-#control_panel label {
-	display: inline-block;
-	width:50%;
-}
-
-#control_panel input {
-	display: inline-block;
-	width:50%;
-}
 
 .selected {
 	background-color: #108971;
@@ -149,6 +143,109 @@
 	cursor: ns-resize;;
 }
 
-section{
-	padding-left:10px;
+#trash_can {
+	width:50px;
+	display: inline-block;
+	vertical-align: top;
+	cursor: pointer;
 }
+
+#add_row {
+	cursor: pointer;
+	width:20px;
+	margin-left: 12px;
+	margin-bottom: 10px;
+	display: block;
+}
+
+.svg_container {
+	max-width:1200px;
+	padding-left:15px;
+	padding-right:15px;
+	padding-top:5px;
+	background-color: #fff;
+	width:95%;
+	margin:auto;
+}
+
+.svg_selectable:hover {
+	stroke: #DA4567;
+	cursor: move;
+}
+
+.svg_resize {
+	cursor: ns-resize;
+}
+
+.brick_highlight:hover {
+	fill : rgba(24, 188, 156, 0.39);
+}
+
+.brick_highlight {
+	pointer-events:all;
+}
+
+.brick_selected {
+	fill : rgba(44, 62, 80, 0.33);
+}
+
+#canvas_labels {
+	position: absolute;
+	top:0px;
+	left:0px;
+	height:200px;
+	width:100px;
+}
+
+#control_panel label {
+	display: inline-block;
+	width:50%;
+}
+
+
+
+.brick_changer {
+	width:75px;
+	height:30px;
+	display: block;
+}
+
+.brick_changer svg{
+	height:24px;
+	width:48px;
+	display:inline-block;
+	vertical-align: top;
+	margin-top:4px;
+	stroke:rgb(32, 245, 242);
+	stroke-width:4; 
+	fill:none;
+}
+
+.brick_changer input {
+	display: table-cell;
+	width:22px;
+	vertical-align: top;
+	margin-top:8px;
+	margin-bottom:8px;
+
+}
+
+.brick {
+	stroke:rgb(68, 68, 68);
+	stroke-width:2;
+	fill:none;
+}
+
+.grip {
+	stroke:rgb(68, 68, 68);
+	stroke-width:1;
+	fill:none;
+	display:none;
+}
+
+#main_svg {
+	height:200px;
+	width: 800px; 
+	display:block;
+}
+

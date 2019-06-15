@@ -1,9 +1,9 @@
 
 body {
-	font-family: 'Lato', 'Arial', sans-serif;
-	font-weight: 300;
-	font-size: 15px;
-	color: #333;
+    font-weight: 300;
+    font-family: 'Montserrat';
+	color: #fff;
+    font-size: 1rem;
 }
 
 a {
@@ -31,18 +31,20 @@ nav {
 }
 
 section {
-	background-color: #18BC9C !important;
+    background-color: #18BC9C;
     color: #fff;
     margin-bottom: 0;
-    background-color: #007bff;
-    padding: 0 0;
     display: block;
+    width: 100%;
+    padding-right: 15px;
+    padding-left: 15px;
+    margin-right: auto;
+    margin-left: auto;
 }
 
 .wdk_container { 
-max-width: 1000px;
-    min-width: 800px;
-    width: 100%;
+    max-width: 1200px;
+    width: 95%;
     padding-right: 15px;
     padding-left: 15px;
     margin-right: auto;
