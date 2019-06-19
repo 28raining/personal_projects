@@ -28,6 +28,7 @@
 
   <!-- Custom Javascript-->
 	<script src="js/waveams.js"></script>
+	<script src="js/draggable_svg.js"></script>
 	<script src="js/html2canvas.min.js"></script>
 	<script src="js/FileSaver.js"></script>
 	<!--<script src="https://cdn.jsdelivr.net/npm/sweetalert2@7.26.29/dist/sweetalert2.all.min.js"></script>-->
@@ -62,6 +63,7 @@
 			<svg height="32" width="64" class="brick_button" id="brick_arrow" onclick="add_brick(this.id)"></svg>
 			<svg height="32" width="64" class="brick_button" id="brick_ann_vertical" onclick="add_brick(this.id)"></svg>
 			<svg height="32" width="64" class="brick_button" id="brick_ann_horizontal" onclick="add_brick(this.id)"></svg>
+			<svg height="32" width="64" class="brick_button" id="brick_ann_group" onclick="add_annotation(this.id)"></svg>
 		</div>
 
 		<div class="wdk_container">
@@ -73,13 +75,12 @@
 	</section>
 
 	<div class="svg_container">
-		<svg id='main_svg'></svg>
-		<img id="add_row" src="images/plus.svg" onclick="add_row()"/>
+		<svg id='main_svg' onload="makeDraggable(evt)"></svg>
 	</div>
 
 	<!--this div has display none and is used for determining svg width-->
 	<div id="dummy_element">
-		<svg viewBox="0 0 200 0"> 
+		<svg> 
 			<g id="test_text"> 
 			</g>
 		</svg>

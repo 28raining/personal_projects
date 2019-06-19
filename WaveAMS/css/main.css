@@ -236,6 +236,13 @@
 	fill:none;
 }
 
+.plus_minus_row_select {
+	cursor: pointer;
+	stroke-width:0;
+	fill:none;
+	pointer-events:all;
+}
+
 .grip {
 	stroke:rgb(68, 68, 68);
 	stroke-width:1;
@@ -243,9 +250,20 @@
 	display:none;
 }
 
+.annotation_group_sel {
+	fill:none;
+	pointer-events:all;
+}
+
 #main_svg {
 	height:200px;
 	width: 800px; 
 	display:block;
 }
+
+#dummy_element svg {
+	height:0px;
+}
+
+
 
