@@ -173,8 +173,14 @@
 	cursor: move;
 }
 
-.svg_resize {
+.svg_resize, .ann_resize {
 	cursor: ns-resize;
+}
+
+.ann_resize {
+	stroke:rgb(68, 68, 68);
+	stroke-width:10;
+	stroke-opacity:0;
 }
 
 .brick_highlight:hover {

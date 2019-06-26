@@ -18,10 +18,10 @@
 #1 - Add annotations on the left
 #3 - allow multiple blocks to be changed sequentially without js error
 
-1 - Allow annotation resize and adding of text
+#1 - Allow annotation resize and adding of text
 #1.a - default annotation to be neatly on row1
-1.b - add text to the annotation
-1.c - allow drag-to-resize of annotation
+#1.b - add text to the annotation
+#1.c - allow drag-to-resize of annotation
 2 - Add arrows
 3 - Add a title
 4 - add sine wave programmability

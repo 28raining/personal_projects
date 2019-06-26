@@ -21,12 +21,19 @@ function makeDraggable(evt) {
       mouse_start_y = evt.clientY;
       mouse_delta_x = evt.clientX - attr_x;
       mouse_delta_y = evt.clientY - attr_y;
-    }
-    if (evt.target.classList.contains('svg_resize')) {
-      allow_x = false;
-      allow_y = true;
-      element_type="resize";
-      extra_info = evt.target.id.split('_')[1];
+
+      if (evt.target.classList.contains('svg_resize')) {
+        allow_x = false;
+        allow_y = true;
+        element_type="svg_resize";
+        extra_info = evt.target.id.split('_')[1];
+      } else if (evt.target.classList.contains('ann_resize')) {
+        allow_x = false;
+        allow_y = true;
+        element_type="ann_resize";
+        extra_info = evt.target.id; 
+        draw_control_panel("annotation_" +  extra_info.split('_')[1]);
+      }
     }
   }
   function drag(evt) {
@@ -46,11 +53,17 @@ function makeDraggable(evt) {
   }
   function endDrag(evt) {
     if (selectedElement) {
-      if (element_type == "resize") {
+      if (element_type == "svg_resize") {
         var new_row_height = timing_diagram.diagram[extra_info].row_height + evt.clientY - mouse_start_y;
         if (new_row_height < 48) new_row_height = 48;
         timing_diagram.total_height += new_row_height - timing_diagram.diagram[extra_info].row_height;
         timing_diagram.diagram[extra_info].row_height =  new_row_height;
+        redraw_svg();
+
+      } else if (element_type == "ann_resize") {
+        var ann_id = extra_info.split('_')[1];
+        if (extra_info.split('_')[3] == 't') timing_diagram.annotations[ann_id].start_y += evt.clientY - mouse_start_y;
+        else timing_diagram.annotations[ann_id].end_y += evt.clientY - mouse_start_y;
         redraw_svg();
       }
     }

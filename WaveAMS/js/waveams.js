@@ -1,7 +1,8 @@
 var timing_diagram = {
   selected_row:0,
-  selected_brick_row:-1,
-  selected_brick_column:-1,
+  //selected_brick_row:-1,
+  //selected_brick_column:-1,
+  selected_item: "",
   diagram:[
       {
           row_height:48,
@@ -67,8 +68,6 @@ function brick_to_path(bk_arry, scale_x=1, scale_y=1) {
 
 function add_brick(id) {
   timing_diagram.diagram[timing_diagram.selected_row].shapes.push(id);
- // timing_diagram.selected_brick_row = timing_diagram.selected_row;
- // timing_diagram.selected_brick_column = timing_diagram.diagram[timing_diagram.selected_row].shapes.length-1;
   redraw_svg();
   var id = "brick_" + timing_diagram.selected_row + "_" + (timing_diagram.diagram[timing_diagram.selected_row].shapes.length-1);
   sel_brick(id)
@@ -79,7 +78,7 @@ function add_annotation(id) {
     type: id,
     text: 'na',
     start_y : 6,
-    scale_y: 1.4
+    end_y: 50
   })
   redraw_svg();
 }
@@ -88,11 +87,6 @@ function update_row_select(index) {
   timing_diagram.selected_row = index;
   draw_control_panel("row_sel");
   redraw_svg();
-}
-
-function update_annotation(id) {
-  var new_id = id + "_text";
-  draw_control_panel("annotation",new_id);
 }
 
 // Fills svg elements with specific classes with an SVG path
@@ -200,7 +194,7 @@ function draw_bricks() {
       start_y = total_height + 8;
       //draw arrow grips
       bricks_svg += array_of_grips.brick_clk__0(start_x,start_y);
-      class_list = ((i==timing_diagram.selected_brick_row) && (j==timing_diagram.selected_brick_column)) ? "brick_selected brick_highlight" : "brick_highlight";
+      class_list = ((dec_sel()[0] == 'b') && (i==dec_sel()[1]) && (j==dec_sel()[2])) ? "brick_selected brick_highlight" : "brick_highlight";
       //draw the selectable rectangles
       bricks_svg += '<rect x="'+start_x+'" y="'+(start_y-2)+'" width="64" height="'+(4+32*y_scale)+'" stroke-width="0" fill="none" class="'+class_list+'" id="brick_'+i+'_'+j+'" onclick="sel_brick(this.id)" />';
     }
@@ -210,62 +204,76 @@ function draw_bricks() {
   return bricks_svg;
 }
 
+//decode selected item. I used one variable for selected item so trash click knows what to do
+function dec_sel() {
+  sel_id = timing_diagram.selected_item.split('_');
+  if      (sel_id[0] == 'b') return ['b',sel_id[1],sel_id[2]];
+  else if (sel_id[0] == 'a') return ['a',sel_id[1],0];
+  else return [null,0,0];
+}
+
 function sel_brick(id) {
   var i;
   var element_new,element_old;
-  var old_id = "brick_" + timing_diagram.selected_brick_row + "_" + timing_diagram.selected_brick_column; 
   var id_split = id.split('_');
   element_new = document.getElementById(id);
-  if ((timing_diagram.selected_brick_row == id_split[1]) && (timing_diagram.selected_brick_column == id_split[2])) {
+  if ((dec_sel()[0]=='b') && (dec_sel()[1] == id_split[1]) && (dec_sel()[2] == id_split[2])) {
     //selected same brick again
     element_new.classList.remove("brick_selected");
     element_new.classList.add("brick_highlight");
-    timing_diagram.selected_brick_row = -1;
-    timing_diagram.selected_brick_column = -1;
+    timing_diagram.selected_item = "";
   } else {
-    timing_diagram.selected_brick_row = Number(id_split[1]);
-    timing_diagram.selected_brick_column = Number(id_split[2]);
+    var old_id = "brick_" + dec_sel()[1] + "_" + dec_sel()[2]; 
+    timing_diagram.selected_item = 'b_' + Number(id_split[1]) + '_' +  Number(id_split[2]);
     element_old = document.getElementById(old_id);
     if (element_old != null) element_old.classList.add("brick_highlight");
     if (element_old != null) element_old.classList.remove("brick_selected");
     element_new.classList.add("brick_selected");
     element_new.classList.remove("brick_highlight");
   }
-  draw_control_panel();
+  draw_control_panel('brick');
 }
 
 function clicked_trash() {
-  var row=timing_diagram.selected_brick_row;
-  var col=timing_diagram.selected_brick_column;
-  if ((row >= 0) && (col >= 0)) {
-    timing_diagram.diagram[row].shapes.splice(col,1);
+  var sel_type = dec_sel()[0]
+  if (sel_type == 'b') {
+    var row= dec_sel()[1];
+    var col= dec_sel()[2];
+    if ((row >= 0) && (col >= 0)) {
+      timing_diagram.diagram[row].shapes.splice(col,1);
+      redraw_svg();
+      if (timing_diagram.diagram[row].shapes.length == 0) {
+        timing_diagram.selected_item = "";
+        draw_control_panel('trash');
+      } else if (col >  timing_diagram.diagram[row].shapes.length-1) {
+        var id = "brick_" + timing_diagram.selected_row + "_" + (timing_diagram.diagram[row].shapes.length-1);
+        sel_brick(id)
+      } 
+    }
+  } else if (sel_type == 'a') {
+    timing_diagram.annotations.splice(dec_sel()[1],1);
+    if (timing_diagram.annotations.length == 0) timing_diagram.annotation_width=0;
     redraw_svg();
-    if (timing_diagram.diagram[row].shapes.length == 0) {
-      timing_diagram.selected_brick_column = -1;
-      timing_diagram.selected_brick_row = -1;
-      draw_control_panel();
-    } else if (col >  timing_diagram.diagram[row].shapes.length-1) {
-      //timing_diagram.selected_brick_column = timing_diagram.diagram[row].shapes.length-1;
-      var id = "brick_" + timing_diagram.selected_row + "_" + (timing_diagram.diagram[row].shapes.length-1);
-      sel_brick(id)
-    } 
   }
 }
 
-function draw_control_panel(info,id) {
-  var row = timing_diagram.selected_brick_row;
-  var col = timing_diagram.selected_brick_column;
+
+function draw_control_panel(info) {
   var content;
-  console.log(info);
-  if (info == "row_sel") {
+  var split_info = info.split('_');
+  if ((split_info[0]=="annotation") || (split_info[0]=="drag")) {
+    timing_diagram.selected_item = 'a_'+split_info[1];
+    content = '<p>Annotation name...</p>';
+    content += '<input type="text" value="'+timing_diagram.annotations[split_info[1]].text+'" onchange="update_ann_text('+split_info[1]+',this.value)"></input>';
+    timing_diagram.sele
+  } else if (info == "row_sel") {
     content = '<p>Chose a row name...</p>';
-    content += '<input type="text" width="'+timing_diagram.label_width+'" value="'+timing_diagram.diagram[timing_diagram.selected_row].label_name+'" onchange="update_row_label(this.value)"></input>';
-  } else if (info=="annotation") {
-    content = '<p>Chose a row name...</p>';
-    content += '<input type="text" width="'+timing_diagram.label_width+'" value="'+timing_diagram.diagram[timing_diagram.selected_row].label_name+'" onchange="document.getElementByID('+id+').value=this.value"></input>';
-  } else if ((row==-1) && (col==-1)) {
+    content += '<input type="text" value="'+timing_diagram.diagram[timing_diagram.selected_row].label_name+'" onchange="update_row_label(this.value)"></input>';
+  } else if (timing_diagram.selected_item == "") {
     content = '<p>Click an element to modify it...</p>';
   } else {
+    var row = dec_sel()[1];
+    var col = dec_sel()[2];
     var type = timing_diagram.diagram[row].shapes[col].split('__');
     switch (type[0]) {
       case "brick_clk":
@@ -290,6 +298,12 @@ function update_row_label(new_label) {
   redraw_svg();
 }
 
+function update_ann_text(i,val) {
+  timing_diagram.annotations[i].text = val;
+  redraw_svg();
+}
+
+
 function get_text_width(text) {
   document.getElementById('test_text').innerHTML = '<text x="0" y="0">'+text+'</text>';
   var testElement = document.querySelector('#test_text'); 
@@ -310,9 +324,8 @@ function control_panel_brick_clk(num){
 }
 
 function update_brick(val) {
-  //console.log(timing_diagram)
-  var row = timing_diagram.selected_brick_row;
-  var col = timing_diagram.selected_brick_column;
+  var row = dec_sel()[1];
+  var col = dec_sel()[2];
   var type = timing_diagram.diagram[row].shapes[col];
   var new_type = type.split('__')[0] + '__' + val;
   var i,selector_type;
@@ -371,40 +384,44 @@ function draw_annotations() {
   if (timing_diagram.annotations.length>0) {
     var number_ann_per_y=[];
     var i,j;
-    var end;
     var start_x;
-    var min_wdith=0;
-    var ann_height = 32;
-    var ann_wid = 24;
-    console.log(timing_diagram);
+    var min_width=0;
+    var ann_wid = 26;
+    var original_height = 32;
     //calculate number of annotations at each y point. This is just to figure out required width
     for (i=0;i<timing_diagram.total_height;i++) number_ann_per_y[i] = 0;
     for (i=0;i<timing_diagram.annotations.length;i++) {
       var start_y = timing_diagram.annotations[i].start_y;
-      var scale_y =  timing_diagram.annotations[i].scale_y;
-      end = start_y + scale_y * ann_height;
-      for(j=start_y; j<end; j++) {
+      var end_y =  timing_diagram.annotations[i].end_y;
+      for(j=start_y; j<end_y; j++) {
         number_ann_per_y[j] += 1;
-        if (number_ann_per_y[j]>min_wdith) min_wdith=number_ann_per_y[j];
+        if (number_ann_per_y[j]>min_width) min_width=number_ann_per_y[j];
       }
     }
-    timing_diagram.annotation_width=6+ min_wdith*ann_wid;
-
+    timing_diagram.annotation_width=6+ min_width*ann_wid;
     //draw the annotations
     for (i=0;i<timing_diagram.total_height;i++) number_ann_per_y[i] = 0;
     for (i=0;i<timing_diagram.annotations.length;i++) {
       var start_y = timing_diagram.annotations[i].start_y;
-      var scale_y =  timing_diagram.annotations[i].scale_y;
-      var height =  scale_y * ann_height;
-      end = start_y + height;
-      start_x = timing_diagram.annotation_width - 40 - ann_wid*number_ann_per_y[start_y];
-      var text_start_x = timing_diagram.annotation_width - 16 - ann_wid*number_ann_per_y[start_y];
-      svg += '<path d="M '+start_x+' '+start_y+' '+brick_to_path(array_of_svg[timing_diagram.annotations[i].type],1,scale_y)+'" class="brick"/>';
+      var end_y =  timing_diagram.annotations[i].end_y;
+      var height =  end_y - start_y;
+      var num_below = 0;
+      for (j=start_y; j<end_y; j++) if (number_ann_per_y[j] > num_below) num_below = number_ann_per_y[j];
+
+      start_x = timing_diagram.annotation_width - 40 - ann_wid*num_below;
+      var text_start_x = start_x + 23;
+      //draw some text
       var label_width = get_text_width(timing_diagram.annotations[i].text)
-      var text_start_y = start_y + (height-label_width)/2;
-      svg += '<text id="123_text" x="0" y="0" transform="translate('+text_start_x+','+text_start_y+') rotate(270,10,10)">'+timing_diagram.annotations[i].text+'</text>';
-      svg += '<rect id="123" class="annotation_group_sel" onclick="update_annotation(this.id)" x="'+(text_start_x-10)+'" y="'+start_y+'" width="20" height="'+height+'"/>';
-      for(j=start_y; j<end; j++) number_ann_per_y[j] += 1;
+      var text_start_y = start_y + (height+label_width)/2;
+      svg += '<text transform="translate('+text_start_x+','+text_start_y+') rotate(270)">'+timing_diagram.annotations[i].text+'</text>';
+      //draw the actual annotation
+      svg += '<path d="M '+start_x+' '+start_y+' '+brick_to_path(array_of_svg[timing_diagram.annotations[i].type],1,height/original_height)+'" class="brick"/>';
+      //draw the selection rectangle
+      svg += '<rect id="annotation_'+i+'" class="annotation_group_sel" onclick="draw_control_panel(this.id)" x="'+(text_start_x-10)+'" y="'+start_y+'" width="20" height="'+height+'"/>';
+      //draw the draggable rectangles
+      svg += '<rect id="drag_'+i+'_ann_t" class="draggable ann_resize" x="'+(start_x + 28)+'" y="'+(start_y-1)+'" width="8" height="2"/>';
+      svg += '<rect id="drag_'+i+'_ann_b" class="draggable ann_resize" x="'+(start_x + 28)+'" y="'+(end_y-1)+'" width="8" height="2"/>';
+      for(j=start_y; j<end_y; j++) number_ann_per_y[j] += 1;
     }
   }
   return svg;
@@ -424,6 +441,6 @@ function redraw_svg() {
 
 function initialise() {
   draw_selectable_bricks();
-  draw_control_panel();
+  draw_control_panel('initial');
   redraw_svg();
 }
