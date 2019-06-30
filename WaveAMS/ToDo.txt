@@ -23,8 +23,24 @@
 #1.b - add text to the annotation
 #1.c - allow drag-to-resize of annotation
 2 - Add arrows
-3 - Add a title
+#2.a - Add the arrow above the graph
+#2.b - Make the end of the arrow draggable
+#2.c - Only allow the arrow to be dropped on a grip
+#2.c0 - switch to system where coordinates are found relative to screen. With the arrow, I don't know exactly where the user clicked so the rectangle moves to behind the mouse always
+#2.c1 - highlight grips
+#2.c2 - move it close to grip if there is one near, but don't require to be dropped on a grip
+2.d - Give multiple selections of arrow type (as many as wavedrom)
+2.d1 - Straight
+2.d2 - 'u', 'n'
+2.d3 - 's', flipped 's'
+2.d4 - sharp version of d2 and d3 
+2.e - Add text into the middle of the arrow
+2.f - turn the snapping on or off
+3 - Add a title (s)
 4 - add sine wave programmability
+
+--clicking a cell needs to change the selected row
+--make arrow move whilst dragging. Maybe just redraw the whole SVG? That might be possible
 
 Extras -
 1 - make annotations bricks red in selector 

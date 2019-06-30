@@ -20,10 +20,12 @@ var timing_diagram = {
   annotations:[],
   annotation_width:0,
   arrows:[],
-  canvas_width:800,
   xdiv_spacing:100,
   label_width:64,
-  total_height:96
+  total_width:800,
+  total_height:96,
+  y_start : 20,
+  grip_radius : 4
 };
 
 var array_of_svg = {
@@ -38,17 +40,33 @@ var array_of_svg = {
   brick_ann_group : ['m',36,0,'l',-8,0,'l',0,32,'l',8,0],
 }
 
-var array_of_grips = {
-  brick_clk__0 : function(start_x,start_y) {
-    var grips = '<circle cx="'+start_x+'" cy="'+start_y+'" r="3" class="grip" />';
-    grips += '<circle cx="'+(start_x+16)+'" cy="'+start_y+'" r="3" class="grip" />';
-    grips += '<circle cx="'+(start_x+32)+'" cy="'+start_y+'" r="3" class="grip" />';
-    grips += '<circle cx="'+(start_x+32)+'" cy="'+(start_y+16)+'" r="3" class="grip" />';
-    grips += '<circle cx="'+(start_x+32)+'" cy="'+(start_y+32)+'" r="3" class="grip" />';
-    grips += '<circle cx="'+(start_x+48)+'" cy="'+(start_y+32)+'" r="3" class="grip" />';
-    grips += '<circle cx="'+(start_x+64)+'" cy="'+(start_y+32)+'" r="3" class="grip" />';
-    return grips;
+var grip_location = [];
+
+function array_of_grips(type, start_x, start_y) {
+  var grips = '';
+  var radius = timing_diagram.grip_radius;
+  var i,xx,yy;
+  if (type == 'brick_clk__0') {
+    var ctr = [
+      { x:start_x,    y:start_y },
+      { x:start_x+16, y:start_y },
+      { x:start_x+32, y:start_y },
+      { x:start_x+32, y:start_y+16 },
+      { x:start_x+32, y:start_y+32 },
+      { x:start_x+48, y:start_y+32 },
+      { x:start_x+64, y:start_y+32 }
+    ]
   }
+  for (i=0;i<ctr.length;i++) {
+    grips += '<circle cx="'+ctr[i].x+'" cy="'+ctr[i].y+'" r="'+radius+'" class="grip" id="grip_'+ctr[i].x+'_'+ctr[i].y+'"/>';
+    for (xx=(ctr[i].x-radius); xx<(ctr[i].x+radius+1); xx++) {
+      for (yy=(ctr[i].y-radius); yy<(ctr[i].y+radius+1); yy++) {
+        grip_location[xx][yy] = 1;
+      }
+    }
+    
+  }
+  return grips;
 }
 
 function brick_to_path(bk_arry, scale_x=1, scale_y=1) {
@@ -83,6 +101,20 @@ function add_annotation(id) {
   redraw_svg();
 }
 
+function add_arrow(id) {
+  timing_diagram.arrows.push({
+    type: id,
+    text: '',
+    start_x : 40,
+    end_x : 150,
+    start_y : 10,
+    end_y : 10,
+    pointer_type : 0
+  })
+  draw_control_panel("arrow_" +  (timing_diagram.arrows.length-1));
+  redraw_svg();
+}
+
 function update_row_select(index) {
   timing_diagram.selected_row = index;
   draw_control_panel("row_sel");
@@ -105,19 +137,19 @@ function draw_selectable_bricks() {
 function draw_row_labels() {
   var row_labels_svg = ""
   var i,label,row_height,reposition_dragger_y,resize_dragger_y,text_y,fill_color;
-  var prev_height = 0;
+  var prev_height = timing_diagram.y_start;
   var an_w = timing_diagram.annotation_width;
   for (i = 0; i < timing_diagram.diagram.length; i++) {
     label = timing_diagram.diagram[i].label_name;
     row_height = timing_diagram.diagram[i].row_height;
     text_y = prev_height+(row_height/2) + 10;
     reposition_dragger_y = text_y - 11;
-    prev_height += row_height;
-    resize_dragger_y = prev_height+2;
+    resize_dragger_y = row_height + prev_height + 2;
     fill_color = (timing_diagram.selected_row == i) ? "black" : "white";
     row_labels_svg += '<rect x="'+(an_w+3)+'" y="'+resize_dragger_y+'" width="40" height="4" rx="2" fill="white" stroke="rgb(68, 68, 68)" stroke-width="2" class="svg_resize draggable" id="row_'+i+'_resizer"/>';
     row_labels_svg += '<rect x="'+(an_w+1)+'" y="'+reposition_dragger_y+'" width="10" height="10" fill='+fill_color+' stroke="rgb(68, 68, 68)" stroke-width="2" class="svg_selectable" onclick="update_row_select('+i+')"/>';
     row_labels_svg += '<text x="'+(an_w+20)+'" y="'+text_y+'" class="svg_selectable" onclick="update_row_select('+i+')">'+label+'</text>';
+    prev_height += row_height;
   }
   timing_diagram.total_height = prev_height;
   return row_labels_svg;
@@ -130,10 +162,10 @@ function draw_vertical_seperators(num_seperators) {
 //  for (i=0;i<timing_diagram.diagram.length;i++) total_height += timing_diagram.diagram[i].row_height+4;
   for (i=0;i<num_seperators;i++) {
     x_st = i*64 + timing_diagram.label_width + timing_diagram.annotation_width;
-    veritcal_seperator_svg += '<path d="M '+x_st+' 0 ';
+    veritcal_seperator_svg += '<path d="M '+x_st+' '+timing_diagram.y_start+' ';
     for(y=4;y<timing_diagram.total_height;y+=4) {
       y_l_end = y-2;
-      veritcal_seperator_svg += 'L '+x_st+' '+y_l_end+' M '+x_st+' '+y;
+      veritcal_seperator_svg += 'l 0 2 m 0 2 ';
     }
     veritcal_seperator_svg +='" stroke = "rgb(68, 68, 68)" stroke-width="1"  fill="none" />';
   }
@@ -173,7 +205,7 @@ function draw_bricks() {
   //draw the path of the brick
   for (i=0;i<timing_diagram.diagram.length;i++) {
     row_height = timing_diagram.diagram[i].row_height;
-    start_y = total_height + 8;
+    start_y = total_height + timing_diagram.y_start + 8;
     start_x = timing_diagram.label_width + timing_diagram.annotation_width;
     y_scale = (row_height-16)/32;
     bricks_svg += '<path d="M '+start_x+' '+start_y+' '
@@ -191,9 +223,9 @@ function draw_bricks() {
     y_scale = (row_height-16)/32;
     for (j=0;j<timing_diagram.diagram[i].shapes.length;j++) {
       start_x = 64*j + timing_diagram.label_width + timing_diagram.annotation_width;
-      start_y = total_height + 8;
+      start_y = total_height + timing_diagram.y_start + 8;
       //draw arrow grips
-      bricks_svg += array_of_grips.brick_clk__0(start_x,start_y);
+      bricks_svg += array_of_grips('brick_clk__0',start_x,start_y);
       class_list = ((dec_sel()[0] == 'b') && (i==dec_sel()[1]) && (j==dec_sel()[2])) ? "brick_selected brick_highlight" : "brick_highlight";
       //draw the selectable rectangles
       bricks_svg += '<rect x="'+start_x+'" y="'+(start_y-2)+'" width="64" height="'+(4+32*y_scale)+'" stroke-width="0" fill="none" class="'+class_list+'" id="brick_'+i+'_'+j+'" onclick="sel_brick(this.id)" />';
@@ -209,6 +241,7 @@ function dec_sel() {
   sel_id = timing_diagram.selected_item.split('_');
   if      (sel_id[0] == 'b') return ['b',sel_id[1],sel_id[2]];
   else if (sel_id[0] == 'a') return ['a',sel_id[1],0];
+  else if (sel_id[0] == 'arr') return ['arr',sel_id[1],0];
   else return [null,0,0];
 }
 
@@ -254,6 +287,11 @@ function clicked_trash() {
     timing_diagram.annotations.splice(dec_sel()[1],1);
     if (timing_diagram.annotations.length == 0) timing_diagram.annotation_width=0;
     redraw_svg();
+  } else if (sel_type == 'arr') {
+    timing_diagram.arrows.splice(dec_sel()[1],1);
+    timing_diagram.selected_item = "";
+    draw_control_panel("trash");
+    redraw_svg();
   }
 }
 
@@ -266,7 +304,10 @@ function draw_control_panel(info) {
     content = '<p>Annotation name...</p>';
     content += '<input type="text" value="'+timing_diagram.annotations[split_info[1]].text+'" onchange="update_ann_text('+split_info[1]+',this.value)"></input>';
     timing_diagram.sele
-  } else if (info == "row_sel") {
+  } else if (split_info[0] == "arrow") {
+    timing_diagram.selected_item = 'arr_'+split_info[1];
+    content = control_panel_arrow(split_info[1])
+  } else if (split_info[0] == "row_sel") {
     content = '<p>Chose a row name...</p>';
     content += '<input type="text" value="'+timing_diagram.diagram[timing_diagram.selected_row].label_name+'" onchange="update_row_label(this.value)"></input>';
   } else if (timing_diagram.selected_item == "") {
@@ -277,7 +318,7 @@ function draw_control_panel(info) {
     var type = timing_diagram.diagram[row].shapes[col].split('__');
     switch (type[0]) {
       case "brick_clk":
-        content = control_panel_brick_clk(type[1]) 
+        content = control_panel_brick(type[1]) 
       break;
     }
   }
@@ -311,14 +352,32 @@ function get_text_width(text) {
   return Math.round(bbox.width);
 }
 
+//Add selections for arrow types
+function control_panel_arrow(id) {
+  var i;
+  var content="";
+  var checked;
+  var type = timing_diagram.arrows[id].pointer_type;
+  var arr_end_type =[];
+  arr_end_type.push('<path d="M 8 11 l 48 0"></path>');
+  arr_end_type.push('<path d="M 8 11 l 8 8 m -8 -8 l 8 -8 m -9 8 l 49 0"></path>');
+  arr_end_type.push('<path d="M 8 11 l 49 0 m -1 0 l -8 8 m 8 -8 l -8 -8"></path>');
+  arr_end_type.push('<path d="M 8 11 l 8 8 m -8 -8 l 8 -8 m -9 8 l 49 0 m -1 0 l -8 8 m 8 -8 l -8 -8"></path>');
+  for (i=0;i<arr_end_type.length;i++) {
+    checked = type==i ? 'checked="checked"' : '';
+    content += '<div class="arrow_changer"><input type="radio" onclick="update_arrow(this.value)" name="sel" value="'+i+'" '+checked+'><svg viewBox="0 0 64 22">'+arr_end_type[i]+'</svg></div>';
+  }
+  return content;
+}
+
 //what to do when property of brick is changed
-function control_panel_brick_clk(num){
+function control_panel_brick(num){
   var i;
   var content="";
   var checked;
   for (i=0;i<2;i++) {
     checked = num==i ? 'checked="checked"' : '';
-    content += '<div class="brick_changer"><input type="radio" onclick="update_brick(this.value)" name="sel" value="'+i+'" '+checked+'><svg viewBox="0 0 64 38"><path d="M 0 1 '+brick_to_path(array_of_svg["brick_clk__"+i+""])+'"></path></svg><br></div>';
+    content += '<div class="brick_changer"><input type="radio" onclick="update_brick(this.value)" name="sel" value="'+i+'" '+checked+'><svg viewBox="0 0 64 38"><path d="M 0 1 '+brick_to_path(array_of_svg["brick_clk__"+i+""])+'"></path></svg></div>';
   }
   return content;
 }
@@ -342,6 +401,12 @@ function update_brick(val) {
       break;
     }
   }
+}
+
+function update_arrow (val) {
+  var arrow_id = dec_sel()[1];
+  timing_diagram.arrows[arrow_id].pointer_type = val;
+  redraw_svg();
 }
 
 function add_row() {
@@ -427,19 +492,99 @@ function draw_annotations() {
   return svg;
 }
 
+function draw_arrow() {
+  var i;
+  var svg ='';
+  var st_x, st_y, end_x, end_y, pointer_type;
+  var p1_x,p1_y,p2_x,p2_y;
+  var ext_x,ext_y;  //added 'extensions' so the arrow triangles don't start in exactly same place as the arrow ends, because that looks messy
+  for (i=0; i<timing_diagram.arrows.length; i++) {
+    st_x = timing_diagram.arrows[i].start_x;
+    st_y = timing_diagram.arrows[i].start_y;
+    end_x = timing_diagram.arrows[i].end_x;
+    end_y = timing_diagram.arrows[i].end_y;
+    pointer_type = timing_diagram.arrows[i].pointer_type;
+    [ext_x,ext_y,p1_x,p1_y,p2_x,p2_y] = rotate_arrow_head(st_x,st_y,end_x,end_y,10)
+    svg += '<path d="M '+st_x+' '+st_y;
+    //"{0} is dead, but {1} is alive! {0} {2}".format("ASP", "ASP.NET")
+    if ((pointer_type == 1) || (pointer_type == 3)) svg+= ' m {8} {9} l {0} {1} m {2} {3} l {4} {5} m {6} {7}'.format(p1_x,p1_y,-p1_x,-p1_y,p2_x,p2_y,-p2_x,-p2_y, -ext_x, -ext_y);
+    svg += ' L '+end_x+' '+end_y
+    if ((pointer_type == 2) || (pointer_type == 3)) svg+= ' m {8} {9} l {0} {1} m {2} {3} l {4} {5} m {6} {7}'.format(-p1_x,-p1_y,p1_x,p1_y,-p2_x,-p2_y,p2_x,p2_y, ext_x, ext_y);
+    svg += ' " class="brick"/>';
+    svg += '<circle id="drag_'+i+'_arr_st" class="draggable arrow_drag" cx="'+(st_x)+'" cy="'+(st_y)+'" r="1"/>';
+    svg += '<circle id="drag_'+i+'_arr_end" class="draggable arrow_drag" cx="'+(end_x)+'" cy="'+(end_y)+'" r="1"/>';
+  }
+  return svg;
+}
+
+function rotate_arrow_head (st_x,st_y,end_x,end_y,length) {
+  var angle = 30 * 2 * Math.PI / 360;
+  var p1_x,p1_y,p2_x,p2_y;
+  var ext_x,ext_y;
+  //first find angle from start to end
+  var ang_st_2_end = Math.atan((end_y-st_y) / (end_x-st_x));
+  if (st_x > end_x) ang_st_2_end += Math.PI;
+  //calculate end of first arrow head line
+  ext_x =Math.round(Math.cos(ang_st_2_end));
+  ext_y =Math.round(Math.sin(ang_st_2_end));
+  p1_x = Math.round(length * Math.cos(ang_st_2_end - angle));
+  p1_y = Math.round(length * Math.sin(ang_st_2_end - angle));
+  p2_x = Math.round(length * Math.cos(ang_st_2_end + angle));
+  p2_y = Math.round(length * Math.sin(ang_st_2_end + angle));
+  return [ext_x,ext_y,p1_x,p1_y,p2_x,p2_y];
+}
+
+function createArray(length) {
+  var arr = new Array(length || 0),
+      i = length;
+
+  if (arguments.length > 1) {
+      var args = Array.prototype.slice.call(arguments, 1);
+      while(i--) arr[length-1 - i] = createArray.apply(this, args);
+  }
+
+  return arr;
+}
+
+
+function initialise_grip_loc() {
+  var i,j;
+  var width = timing_diagram.total_width;
+  var height = timing_diagram.total_height;
+  grip_location = createArray(width, height);
+  for (i=0;i<width; i++) {
+    for (j=0;j<height; j++) {
+      grip_location[i][j] = 0;
+    }
+  }
+}
+
 function redraw_svg() {
   resize_svg();
+  initialise_grip_loc();
   inner_svg="";
   inner_svg += draw_annotations();
   inner_svg += draw_vertical_seperators(14);
   inner_svg += draw_row_labels();
   inner_svg += draw_bricks();
+  inner_svg += draw_arrow()
   inner_svg += draw_plus_minus_row()
   document.getElementById('main_svg').innerHTML = inner_svg;
 }
 
 
 function initialise() {
+  if (!String.prototype.format) {
+    String.prototype.format = function() {
+      var args = arguments;
+      return this.replace(/{(\d+)}/g, function(match, number) { 
+        return typeof args[number] != 'undefined'
+          ? args[number]
+          : match
+        ;
+      });
+    };
+  }
   draw_selectable_bricks();
   draw_control_panel('initial');
   redraw_svg();
