@@ -23,9 +23,10 @@ var timing_diagram = {
   xdiv_spacing:100,
   label_width:64,
   total_width:800,
-  total_height:96,
+  total_height:116,
   y_start : 20,
-  grip_radius : 4
+  grip_radius : 4,
+  snapping : true
 };
 
 var array_of_svg = {
@@ -103,8 +104,10 @@ function add_annotation(id) {
 
 function add_arrow(id) {
   timing_diagram.arrows.push({
-    type: id,
-    text: '',
+    type: 0,
+    color: "#000000",
+    opacity : 0.4,
+    text: 'temp',
     start_x : 40,
     end_x : 150,
     start_y : 10,
@@ -113,12 +116,18 @@ function add_arrow(id) {
   })
   draw_control_panel("arrow_" +  (timing_diagram.arrows.length-1));
   redraw_svg();
+  alertify.notify('Drag the end of the arrow to reposition', 'warning', 4);
 }
 
 function update_row_select(index) {
   timing_diagram.selected_row = index;
   draw_control_panel("row_sel");
   redraw_svg();
+}
+
+function toggle_snapping (checked) {
+  if (checked) timing_diagram.snapping = true;
+  else timing_diagram.snapping = false;
 }
 
 // Fills svg elements with specific classes with an SVG path
@@ -345,8 +354,8 @@ function update_ann_text(i,val) {
 }
 
 
-function get_text_width(text) {
-  document.getElementById('test_text').innerHTML = '<text x="0" y="0">'+text+'</text>';
+function get_text_width(text, size="1rem") {
+  document.getElementById('test_text').innerHTML = '<text x="0" y="0" style="font-size:'+size+'">'+text+'</text>';
   var testElement = document.querySelector('#test_text'); 
   var bbox = testElement.getBBox(); 
   return Math.round(bbox.width);
@@ -355,18 +364,49 @@ function get_text_width(text) {
 //Add selections for arrow types
 function control_panel_arrow(id) {
   var i;
-  var content="";
+  var content='<div class="control_panel_b1">';
   var checked;
+  var arrow = timing_diagram.arrows[id];
   var type = timing_diagram.arrows[id].pointer_type;
   var arr_end_type =[];
+  var arr_shape_type =[];
+  //first draw the arrow end selection
   arr_end_type.push('<path d="M 8 11 l 48 0"></path>');
   arr_end_type.push('<path d="M 8 11 l 8 8 m -8 -8 l 8 -8 m -9 8 l 49 0"></path>');
   arr_end_type.push('<path d="M 8 11 l 49 0 m -1 0 l -8 8 m 8 -8 l -8 -8"></path>');
   arr_end_type.push('<path d="M 8 11 l 8 8 m -8 -8 l 8 -8 m -9 8 l 49 0 m -1 0 l -8 8 m 8 -8 l -8 -8"></path>');
   for (i=0;i<arr_end_type.length;i++) {
     checked = type==i ? 'checked="checked"' : '';
-    content += '<div class="arrow_changer"><input type="radio" onclick="update_arrow(this.value)" name="sel" value="'+i+'" '+checked+'><svg viewBox="0 0 64 22">'+arr_end_type[i]+'</svg></div>';
+    content += '<div class="arrow_changer"><input type="radio" onclick="update_arrow(this.name,this.value)" name="head_sel" value="'+i+'" '+checked+'><svg viewBox="0 0 64 22">'+arr_end_type[i]+'</svg></div>';
   }
+  content+='</div>';
+  content+='<div class="control_panel_seperator"></div>';
+  //then the arrow shape selection
+  var type = timing_diagram.arrows[id].type;
+  content+='<div class="control_panel_b2">';
+  arr_shape_type.push('<path d="M 8 11 l 40 0"></path>');
+  arr_shape_type.push('<path d="M 8 4 l 20 0 l 0 14 l 20 0"></path>');
+  arr_shape_type.push('<path d="M 12 0 l 0 10 l 36 0 l 0 10"></path>');
+  arr_shape_type.push('<path d="M 12 0 l 0 20 l 32 0"></path>');
+  arr_shape_type.push('<path d="M 8 22 q 24 -22 48 0 "></path>');
+  arr_shape_type.push('<path d="M 8 6 q 24 22 48 0 "></path>');
+  arr_shape_type.push('<path d="M 8 15 q 12 -22 24 0 q 12 22 24 0 "></path>');
+  arr_shape_type.push('<path d="M 8 15 q 12 22 24 0 q 12 -22 24 0 "></path>');
+  for (i=0;i<arr_shape_type.length;i++) {
+    checked = type==i ? 'checked="checked"' : '';
+    content += '<div class="arrow_type"><input type="radio" onclick="update_arrow(this.name,this.value)" name="type_sel" value="'+i+'" '+checked+'><svg viewBox="0 0 64 30">'+arr_shape_type[i]+'</svg></div>';
+  }
+  content +='</div>';
+  content +='<div class="control_panel_seperator"></div>';
+  //text modifier and color selector
+  content +='<div class="control_panel_b3">';
+  content += '<input type="text" value="'+arrow.text+'" onchange="update_arrow(this.type,this.value)"></input>';
+  content +='</div>';
+  content +='<div class="control_panel_seperator"></div>';
+  content +='<div class="control_panel_b4">';
+  content += '<div class="control_panel_3rd"><p>Color:</p><input type="color" value="'+arrow.color+'" onchange="update_arrow(this.type,this.value)"></input></div>';
+  content += '<div class="control_panel_3rd"><p>Opacity:</p><input type="text" name="opacity" value="'+arrow.opacity+'" class="control_panel_number" onchange="update_arrow(this.name,this.value)"></input></div>';
+  content +='</div>';
   return content;
 }
 
@@ -403,9 +443,19 @@ function update_brick(val) {
   }
 }
 
-function update_arrow (val) {
+function update_arrow (type,val) {
   var arrow_id = dec_sel()[1];
-  timing_diagram.arrows[arrow_id].pointer_type = val;
+  if (type == "head_sel") {
+    timing_diagram.arrows[arrow_id].pointer_type = val;
+  } else if (type == "type_sel") {
+    timing_diagram.arrows[arrow_id].type = val;
+  } else if (type == "text") {
+    timing_diagram.arrows[arrow_id].text = val;
+  } else if (type == "color") {
+    timing_diagram.arrows[arrow_id].color = val;
+  } else if (type == "opacity") {
+    timing_diagram.arrows[arrow_id].opacity = val;
+  }
   redraw_svg();
 }
 
@@ -496,23 +546,85 @@ function draw_arrow() {
   var i;
   var svg ='';
   var st_x, st_y, end_x, end_y, pointer_type;
-  var p1_x,p1_y,p2_x,p2_y;
-  var ext_x,ext_y;  //added 'extensions' so the arrow triangles don't start in exactly same place as the arrow ends, because that looks messy
+  var s_p1_x,s_p1_y,s_p2_x,s_p2_y,e_p1_x,e_p1_y,e_p2_x,e_p2_y;
+  var s_ext_x,s_ext_y,e_ext_x,e_ext_y;  //added 'extensions' so the arrow triangles don't start in exactly same place as the arrow ends, because that looks messy
+  var type;
+  var infl_x, infl_y;
+  var mid_x, mid_y;
+  var arr_path = ''
+  var text,color,opacity;
   for (i=0; i<timing_diagram.arrows.length; i++) {
     st_x = timing_diagram.arrows[i].start_x;
     st_y = timing_diagram.arrows[i].start_y;
     end_x = timing_diagram.arrows[i].end_x;
     end_y = timing_diagram.arrows[i].end_y;
     pointer_type = timing_diagram.arrows[i].pointer_type;
-    [ext_x,ext_y,p1_x,p1_y,p2_x,p2_y] = rotate_arrow_head(st_x,st_y,end_x,end_y,10)
+    type = timing_diagram.arrows[i].type;
+    text = timing_diagram.arrows[i].text;
+    color = timing_diagram.arrows[i].color;
+    opacity = timing_diagram.arrows[i].opacity;
     svg += '<path d="M '+st_x+' '+st_y;
-    //"{0} is dead, but {1} is alive! {0} {2}".format("ASP", "ASP.NET")
-    if ((pointer_type == 1) || (pointer_type == 3)) svg+= ' m {8} {9} l {0} {1} m {2} {3} l {4} {5} m {6} {7}'.format(p1_x,p1_y,-p1_x,-p1_y,p2_x,p2_y,-p2_x,-p2_y, -ext_x, -ext_y);
-    svg += ' L '+end_x+' '+end_y
-    if ((pointer_type == 2) || (pointer_type == 3)) svg+= ' m {8} {9} l {0} {1} m {2} {3} l {4} {5} m {6} {7}'.format(-p1_x,-p1_y,p1_x,p1_y,-p2_x,-p2_y,p2_x,p2_y, ext_x, ext_y);
-    svg += ' " class="brick"/>';
+    arr_path = '';
+    mid_x = st_x + (end_x - st_x)/2;
+    mid_y = st_y + (end_y - st_y)/2;
+    //draw the arrow curve as defined by the user
+    if (type == 0) {
+      [s_ext_x,s_ext_y,s_p1_x,s_p1_y,s_p2_x,s_p2_y] = rotate_arrow_head(st_x,st_y,end_x,end_y,10);
+      [e_ext_x,e_ext_y,e_p1_x,e_p1_y,e_p2_x,e_p2_y] = rotate_arrow_head(end_x,end_y,st_x,st_y,10);
+      console.log( rotate_arrow_head(end_x,end_y,st_x,st_y,10));
+      arr_path += ' L '+end_x+' '+end_y;
+    } else if (type == 1) {
+      [s_ext_x,s_ext_y,s_p1_x,s_p1_y,s_p2_x,s_p2_y] = rotate_arrow_head(0,0,1,0,10);
+      [e_ext_x,e_ext_y,e_p1_x,e_p1_y,e_p2_x,e_p2_y] = rotate_arrow_head(1,0,0,0,10);
+      arr_path += ' l {0} {1} l {2} {3} l {4} {5}'.format((end_x-st_x)/2, 0, 0, end_y-st_y, (end_x-st_x)/2, 0);
+    } else if (type == 2) {
+      [s_ext_x,s_ext_y,s_p1_x,s_p1_y,s_p2_x,s_p2_y] = rotate_arrow_head(0,0,0,1,10);
+      [e_ext_x,e_ext_y,e_p1_x,e_p1_y,e_p2_x,e_p2_y] = rotate_arrow_head(0,1,0,0,10);
+      arr_path += ' l {0} {1} l {2} {3} l {4} {5}'.format(0,(end_y-st_y)/2, end_x-st_x, 0, 0, (end_y-st_y)/2);
+    } else if (type == 3) {
+      [s_ext_x,s_ext_y,s_p1_x,s_p1_y,s_p2_x,s_p2_y] = rotate_arrow_head(0,0,0,1,10);
+      [e_ext_x,e_ext_y,e_p1_x,e_p1_y,e_p2_x,e_p2_y] = rotate_arrow_head(1,0,0,0,10);
+      arr_path += ' l {0} {1} l {2} {3}'.format(0,end_y-st_y, end_x-st_x, 0);
+    } else if (type == 4) {
+      [infl_x,infl_y] = find_inflection_point (st_x,st_y,end_x,end_y,32,true);
+      [s_ext_x,s_ext_y,s_p1_x,s_p1_y,s_p2_x,s_p2_y] = rotate_arrow_head(st_x,st_y,infl_x,infl_y,10);
+      [e_ext_x,e_ext_y,e_p1_x,e_p1_y,e_p2_x,e_p2_y] = rotate_arrow_head(end_x,end_y,infl_x,infl_y,10);
+      arr_path += ' Q {0} {1} {2} {3}'.format(infl_x,infl_y, end_x, end_y);
+    } else if (type == 5) {
+      [infl_x,infl_y] = find_inflection_point (st_x,st_y,end_x,end_y,32,false);
+      [s_ext_x,s_ext_y,s_p1_x,s_p1_y,s_p2_x,s_p2_y] = rotate_arrow_head(st_x,st_y,infl_x,infl_y,10);
+      [e_ext_x,e_ext_y,e_p1_x,e_p1_y,e_p2_x,e_p2_y] = rotate_arrow_head(end_x,end_y,infl_x,infl_y,10);
+      arr_path += ' Q {0} {1} {2} {3}'.format(infl_x,infl_y, end_x, end_y);
+    } else if (type == 6) {
+      [infl_x,infl_y] = find_inflection_point (st_x,st_y,mid_x,mid_y,32,true);
+      [s_ext_x,s_ext_y,s_p1_x,s_p1_y,s_p2_x,s_p2_y] = rotate_arrow_head(st_x,st_y,infl_x,infl_y,10);
+      arr_path += ' Q {0} {1} {2} {3}'.format(infl_x,infl_y, mid_x, mid_y);
+      [infl_x,infl_y] = find_inflection_point (mid_x,mid_y,end_x,end_y,32,false);
+      [e_ext_x,e_ext_y,e_p1_x,e_p1_y,e_p2_x,e_p2_y] = rotate_arrow_head(end_x,end_y,infl_x,infl_y,10);
+      arr_path += ' Q {0} {1} {2} {3}'.format(infl_x,infl_y, end_x, end_y);
+    }  else if (type == 7) {
+      [infl_x,infl_y] = find_inflection_point (st_x,st_y,mid_x,mid_y,32,false);
+      [s_ext_x,s_ext_y,s_p1_x,s_p1_y,s_p2_x,s_p2_y] = rotate_arrow_head(st_x,st_y,infl_x,infl_y,10);
+      arr_path += ' Q {0} {1} {2} {3}'.format(infl_x,infl_y, mid_x, mid_y);
+      [infl_x,infl_y] = find_inflection_point (mid_x,mid_y,end_x,end_y,32,true);
+      [e_ext_x,e_ext_y,e_p1_x,e_p1_y,e_p2_x,e_p2_y] = rotate_arrow_head(end_x,end_y,infl_x,infl_y,10);
+      arr_path += ' Q {0} {1} {2} {3}'.format(infl_x,infl_y, end_x, end_y);
+    } 
+    //Add pointer to 'start' end of the arrow
+    if ((pointer_type == 1) || (pointer_type == 3)) svg+= ' m {8} {9} l {0} {1} m {2} {3} l {4} {5} m {6} {7}'.format(s_p1_x,s_p1_y,-s_p1_x,-s_p1_y,s_p2_x,s_p2_y,-s_p2_x,-s_p2_y, -s_ext_x, -s_ext_y);
+    //draw arrow line
+    svg += arr_path;
+    //Add pointer to 'end' end of the arrow
+    if ((pointer_type == 2) || (pointer_type == 3)) svg+= ' m {8} {9} l {0} {1} m {2} {3} l {4} {5} m {6} {7}'.format(e_p1_x,e_p1_y,-e_p1_x,-e_p1_y,e_p2_x,e_p2_y,-e_p2_x,-e_p2_y, -e_ext_x, -e_ext_y);
+    svg += ' " class="arrow" stroke="'+color+'" stroke-opacity="'+opacity+'"/></path>';
     svg += '<circle id="drag_'+i+'_arr_st" class="draggable arrow_drag" cx="'+(st_x)+'" cy="'+(st_y)+'" r="1"/>';
-    svg += '<circle id="drag_'+i+'_arr_end" class="draggable arrow_drag" cx="'+(end_x)+'" cy="'+(end_y)+'" r="1"/>';
+    svg += '<circle id="drag_'+i+'_arr_end" class="draggable arrow_drag" cx="'+(end_x)+'" cy="'+(end_y)+'" r="1"/>';  
+    //Add the arrow text
+    var text_width=get_text_width(text, '0.7rem');
+    var x_loc = mid_x - text_width/2;
+    svg += '<rect x="{0}" y="{1}" width="{2}" height="{3}" class="background_rect"/>'.format(x_loc-4,mid_y-8,text_width+8,16);
+    svg += '<text x="{0}" y="{1}" class="arrow_text" fill="{2}">{3}</text>'.format(x_loc,mid_y+4,color,timing_diagram.arrows[i].text);
+    console.log(timing_diagram)
   }
   return svg;
 }
@@ -532,6 +644,20 @@ function rotate_arrow_head (st_x,st_y,end_x,end_y,length) {
   p2_x = Math.round(length * Math.cos(ang_st_2_end + angle));
   p2_y = Math.round(length * Math.sin(ang_st_2_end + angle));
   return [ext_x,ext_y,p1_x,p1_y,p2_x,p2_y];
+}
+
+//arcs are created by adding an inflection point which the start and the end of the arc point towards.
+function find_inflection_point (st_x,st_y,end_x,end_y,length,flip) {
+  var infl_x, infl_y;
+  var deg_90 = 90 * 2 * Math.PI / 360;
+  var flip_mx = flip ? -1 : 1;
+  //find the angle of the inflection point and the x-y axis
+  var theeta = flip_mx*deg_90 + Math.atan((end_y-st_y)/(end_x-st_x));
+  var x_delta = length * Math.cos(theeta);
+  var y_delta = length * Math.sin(theeta);
+  infl_x = Math.round(st_x + x_delta + (end_x-st_x)/2);
+  infl_y = Math.round(st_y + y_delta + (end_y-st_y)/2);
+  return [infl_x, infl_y];
 }
 
 function createArray(length) {

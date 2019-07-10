@@ -40,10 +40,12 @@ function makeDraggable(evt) {
           allow_x = true;
           allow_y = true;
           element_type="arrow_drag";
-          var elements = document.querySelectorAll('.grip');
-          for(var i=0; i<elements.length; i++){
-              elements[i].style.display = 'block';
-          }
+          if (timing_diagram.snapping) {
+            var elements = document.querySelectorAll('.grip');
+            for(var i=0; i<elements.length; i++){
+                elements[i].style.display = 'block';
+            }
+           }
           draw_control_panel("arrow_" +  extra_info[1]);
         }
 
@@ -92,7 +94,9 @@ function makeDraggable(evt) {
         else                     arr_y = timing_diagram.arrows[extra_info[1]].end_y;
         arr_x += evt.clientX - mouse_start_x;
         arr_y += evt.clientY - mouse_start_y;
-        [arr_x,arr_y] = find_grip_center(arr_x,arr_y);
+        if (timing_diagram.snapping) {
+          [arr_x,arr_y] = find_grip_center(arr_x,arr_y);
+        }
         if (extra_info[3]=='st') timing_diagram.arrows[extra_info[1]].start_x = arr_x;
         else                     timing_diagram.arrows[extra_info[1]].end_x = arr_x;
         if (extra_info[3]=='st') timing_diagram.arrows[extra_info[1]].start_y = arr_y;
