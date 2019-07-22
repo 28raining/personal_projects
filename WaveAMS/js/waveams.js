@@ -7,14 +7,18 @@ var timing_diagram = {
       {
           row_height:48,
           y_offset:0,
-          shapes:[]    ,
-          label_name:"clk"
+          shapes:[],
+          label_name:"clk",
+          title: '',
+          title_height: 0
       },
       {
           row_height:48,
           y_offset:0,
           shapes:[],   
-          label_name:"dat"
+          label_name:"dat",
+          title: '',
+          title_height: 0
       }
   ],
   annotations:[],
@@ -39,6 +43,7 @@ var array_of_svg = {
   brick_ann_vertical : ['m',32,0,'l',0,2,'m',0,4,'l',0,4,'m',0,4,'l',0,4,'m',0,4,'l',0,4,'m',0,4,'l',0,2],
   brick_ann_horizontal : ['m',16,16,'l',2,0,'m',4,0,'l',4,0,'m',4,0,'l',4,0,'m',4,0,'l',4,0,'m',4,0,'l',2,0],
   brick_ann_group : ['m',36,0,'l',-8,0,'l',0,32,'l',8,0],
+  brick_title : [],
 }
 
 var grip_location = [];
@@ -93,12 +98,19 @@ function add_brick(id) {
 }
 
 function add_annotation(id) {
-  timing_diagram.annotations.push({
-    type: id,
-    text: 'na',
-    start_y : 6,
-    end_y: 50
-  })
+  if (id == "brick_title") {
+    var row = timing_diagram.selected_row;
+    timing_diagram.diagram[row].title = 'pacccc';
+    timing_diagram.diagram[row].title_height = 20;
+    timing_diagram.total_height += timing_diagram.diagram[row].title_height;
+  } else {
+    timing_diagram.annotations.push({
+      type: id,
+      text: 'na',
+      start_y : 6,
+      end_y: 50
+    })
+  }
   redraw_svg();
 }
 
@@ -121,7 +133,7 @@ function add_arrow(id) {
 
 function update_row_select(index) {
   timing_diagram.selected_row = index;
-  draw_control_panel("row_sel");
+  draw_control_panel("rowSel");
   redraw_svg();
 }
 
@@ -137,22 +149,35 @@ function draw_selectable_bricks() {
   for (j=0; j < keys.length; j++) {
     element = document.getElementById(keys[j])
     if (element) {
-      svg = '<path d="M 0 1 ' + brick_to_path(array_of_svg[keys[j]]) + '"/>';
+      if (keys[j]=='brick_title') svg = '<text x="0" y="28" class="brick_title">ABC</text>';
+      else svg = '<path d="M 0 1 ' + brick_to_path(array_of_svg[keys[j]]) + '"/>';
       element.innerHTML = svg;
     }
   }
 }
 
-function draw_row_labels() {
+function draw_row_labels_and_titles() {
   var row_labels_svg = ""
   var i,label,row_height,reposition_dragger_y,resize_dragger_y,text_y,fill_color;
+  var title_x;
   var prev_height = timing_diagram.y_start;
   var an_w = timing_diagram.annotation_width;
+  var onclick = ''
   for (i = 0; i < timing_diagram.diagram.length; i++) {
+    //draw the title
+    if (timing_diagram.diagram[i].title_height > 0) {
+      title_x = (timing_diagram.total_width - get_text_width(timing_diagram.diagram[i].title)) / 2;
+      onclick = 'onclick="draw_control_panel(this.id)"'
+      row_labels_svg += '<rect x="{0}" y="{1}" width="{2}" height="{3}" class="title_background"/>'.format(timing_diagram.label_width+an_w-2,prev_height,timing_diagram.total_width-timing_diagram.label_width+an_w,timing_diagram.diagram[i].title_height + 8)
+      prev_height += timing_diagram.diagram[i].title_height;
+      row_labels_svg += '<text x="{1}" y="{2}" id="titleSel_{3}" {4}>{0}</text>'.format(timing_diagram.diagram[i].title,title_x,prev_height,i,onclick)
+      
+    }
     label = timing_diagram.diagram[i].label_name;
     row_height = timing_diagram.diagram[i].row_height;
     text_y = prev_height+(row_height/2) + 10;
     reposition_dragger_y = text_y - 11;
+    //daw the label
     resize_dragger_y = row_height + prev_height + 2;
     fill_color = (timing_diagram.selected_row == i) ? "black" : "white";
     row_labels_svg += '<rect x="'+(an_w+3)+'" y="'+resize_dragger_y+'" width="40" height="4" rx="2" fill="white" stroke="rgb(68, 68, 68)" stroke-width="2" class="svg_resize draggable" id="row_'+i+'_resizer"/>';
@@ -214,7 +239,7 @@ function draw_bricks() {
   //draw the path of the brick
   for (i=0;i<timing_diagram.diagram.length;i++) {
     row_height = timing_diagram.diagram[i].row_height;
-    start_y = total_height + timing_diagram.y_start + 8;
+    start_y = total_height + timing_diagram.y_start + 8 + timing_diagram.diagram[i].title_height;
     start_x = timing_diagram.label_width + timing_diagram.annotation_width;
     y_scale = (row_height-16)/32;
     bricks_svg += '<path d="M '+start_x+' '+start_y+' '
@@ -223,7 +248,7 @@ function draw_bricks() {
       bricks_svg += brick_to_path(array_of_svg[timing_diagram.diagram[i].shapes[j]],1,y_scale);
     }
     bricks_svg += '" class="brick"/>';
-    total_height += timing_diagram.diagram[i].row_height;
+    total_height += timing_diagram.diagram[i].row_height + timing_diagram.diagram[i].title_height;
   }
   
   total_height=0;
@@ -232,14 +257,14 @@ function draw_bricks() {
     y_scale = (row_height-16)/32;
     for (j=0;j<timing_diagram.diagram[i].shapes.length;j++) {
       start_x = 64*j + timing_diagram.label_width + timing_diagram.annotation_width;
-      start_y = total_height + timing_diagram.y_start + 8;
+      start_y = total_height + timing_diagram.y_start + 8 + timing_diagram.diagram[i].title_height;;
       //draw arrow grips
       bricks_svg += array_of_grips('brick_clk__0',start_x,start_y);
       class_list = ((dec_sel()[0] == 'b') && (i==dec_sel()[1]) && (j==dec_sel()[2])) ? "brick_selected brick_highlight" : "brick_highlight";
       //draw the selectable rectangles
       bricks_svg += '<rect x="'+start_x+'" y="'+(start_y-2)+'" width="64" height="'+(4+32*y_scale)+'" stroke-width="0" fill="none" class="'+class_list+'" id="brick_'+i+'_'+j+'" onclick="sel_brick(this.id)" />';
     }
-    total_height += timing_diagram.diagram[i].row_height;
+    total_height += timing_diagram.diagram[i].row_height + timing_diagram.diagram[i].title_height;;
   }
 
   return bricks_svg;
@@ -316,9 +341,12 @@ function draw_control_panel(info) {
   } else if (split_info[0] == "arrow") {
     timing_diagram.selected_item = 'arr_'+split_info[1];
     content = control_panel_arrow(split_info[1])
-  } else if (split_info[0] == "row_sel") {
+  } else if (split_info[0] == "rowSel") {
     content = '<p>Chose a row name...</p>';
     content += '<input type="text" value="'+timing_diagram.diagram[timing_diagram.selected_row].label_name+'" onchange="update_row_label(this.value)"></input>';
+  } else if (split_info[0] == "titleSel") {
+    content = '<p>Chose the title...</p>';
+    content += '<input type="text" value="{0}" onchange="update_row_title(this.value,{1})"></input>'.format(timing_diagram.diagram[split_info[1]].title,split_info[1]);
   } else if (timing_diagram.selected_item == "") {
     content = '<p>Click an element to modify it...</p>';
   } else {
@@ -345,6 +373,11 @@ function update_row_label(new_label) {
     if (label_width > min_width) min_width = label_width;
   }
   timing_diagram.label_width = min_width;
+  redraw_svg();
+}
+
+function update_row_title(val, id){
+  timing_diagram.diagram[id].title=val;
   redraw_svg();
 }
 
@@ -465,7 +498,8 @@ function add_row() {
     row_height:48,
     y_offset:0,
     shapes:[],
-    label_name:'ndef'     
+    label_name:'ndef',
+    title_height:0   
   });
   timing_diagram.total_height += 48;
   redraw_svg();
@@ -571,7 +605,6 @@ function draw_arrow() {
     if (type == 0) {
       [s_ext_x,s_ext_y,s_p1_x,s_p1_y,s_p2_x,s_p2_y] = rotate_arrow_head(st_x,st_y,end_x,end_y,10);
       [e_ext_x,e_ext_y,e_p1_x,e_p1_y,e_p2_x,e_p2_y] = rotate_arrow_head(end_x,end_y,st_x,st_y,10);
-      console.log( rotate_arrow_head(end_x,end_y,st_x,st_y,10));
       arr_path += ' L '+end_x+' '+end_y;
     } else if (type == 1) {
       [s_ext_x,s_ext_y,s_p1_x,s_p1_y,s_p2_x,s_p2_y] = rotate_arrow_head(0,0,1,0,10);
@@ -624,7 +657,6 @@ function draw_arrow() {
     var x_loc = mid_x - text_width/2;
     svg += '<rect x="{0}" y="{1}" width="{2}" height="{3}" class="background_rect"/>'.format(x_loc-4,mid_y-8,text_width+8,16);
     svg += '<text x="{0}" y="{1}" class="arrow_text" fill="{2}">{3}</text>'.format(x_loc,mid_y+4,color,timing_diagram.arrows[i].text);
-    console.log(timing_diagram)
   }
   return svg;
 }
@@ -691,7 +723,7 @@ function redraw_svg() {
   inner_svg="";
   inner_svg += draw_annotations();
   inner_svg += draw_vertical_seperators(14);
-  inner_svg += draw_row_labels();
+  inner_svg += draw_row_labels_and_titles();
   inner_svg += draw_bricks();
   inner_svg += draw_arrow()
   inner_svg += draw_plus_minus_row()
@@ -699,7 +731,9 @@ function redraw_svg() {
 }
 
 
+
 function initialise() {
+  //Adds the string.format prototype if it doesn't exist
   if (!String.prototype.format) {
     String.prototype.format = function() {
       var args = arguments;

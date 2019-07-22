@@ -38,11 +38,13 @@
 #2.f - turn the snapping on or off
 #2.g - add a color picker for arrows. Make the default have a lower opacity and be more gray. Make the y lines lower opacity
 #2.h - add a popup for arrow instructions
-3 - Add a title (s)
+#3 - Add a title (s)
 4 - add sine wave programmability
-5 - add a scale
-6 - make undo and redo work
-7 - put the state into a text box and a cookie so user can survive a crash
+5 - Add load / save capability. Show the code
+6 - Download as PNG option
+7 - make undo and redo work
+8 - add a scale
+9 - put the state into a text box and a cookie so user can survive a crash
 
 --clicking a cell needs to change the selected row
 --make arrow move whilst dragging. Maybe just redraw the whole SVG? That might be possible
