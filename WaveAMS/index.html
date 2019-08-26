@@ -12,6 +12,7 @@
 	<!-- Custom fonts for this template -->
 	<!-- Use this link for fast loading in future
 	<link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet" type="text/css">
+	<script src="https://cdn.jsdelivr.net/npm/canvg/dist/browser/canvg.min.js"></script>
 	<!-- end of CSS sourced from online-->
 
 	<!-- This CSS is only for offline coding 	-->
@@ -26,9 +27,10 @@
 	<link href="css/main.css" rel="stylesheet">
 	<link href="css/alertify.min.css" rel="stylesheet">
 	<link href="css/theme_alertify_default.min.css" rel="stylesheet">
-	<link href="slider_src/nouislider.min.css" rel="stylesheet">
+	<link href="css/nouislider.css" rel="stylesheet">
 
-  <!-- Custom Javascript-->
+	<!-- Custom Javascript-->
+	<script src="js/nouislider.min.js"></script>
 	<script src="js/waveams.js"></script>
 	<script src="js/draggable_svg.js"></script>
 	<script src="js/html2canvas.min.js"></script>
@@ -37,7 +39,8 @@
 	<!--<script src="https://cdn.jsdelivr.net/npm/sweetalert2@7.26.29/dist/sweetalert2.all.min.js"></script>-->
 	<link href="css/toastr.min.css" rel="stylesheet"/>
 	<script src="js/toastr.min.js"></script>
-	<script src="slider_src/nouislider.min.js"></script>
+
+	<script src="js/canvg.min.js"></script>
 
 </head>
 <body id="page-top" onload="initialise();" ondragover="allowDrop(event)" ondrop="drop(event)">
@@ -70,6 +73,8 @@
 			<svg height="32" width="64" class="brick_button" id="brick_title" onclick="add_annotation(this.id)"></svg>
 		</div>
 
+		<a onclick="to_canv()">Download</a>
+
 		<div class="wdk_container">
 			<!-- The trash can -->
 			<img id="trash_can" src="images/delete.svg" onclick="clicked_trash()"/><div id="control_panel"></div>
@@ -82,6 +87,8 @@
 		<svg id='main_svg' onload="makeDraggable(evt)"></svg>
 	</div>
 
+	<div id="slider-handles"></div>
+
 	<!--this div has display none and is used for determining svg width-->
 	<div id="dummy_element">
 		<svg> 
@@ -89,6 +96,8 @@
 			</g>
 		</svg>
 	</div>
+
+	<canvas id="canvas" width="800px" height="600px"></canvas>
 
 		
 			

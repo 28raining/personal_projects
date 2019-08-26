@@ -39,7 +39,14 @@
 #2.g - add a color picker for arrows. Make the default have a lower opacity and be more gray. Make the y lines lower opacity
 #2.h - add a popup for arrow instructions
 #3 - Add a title (s)
+#3a - remove title 
+#3b - add only one title
 4 - add sine wave programmability
+4a - add a phase slider <- ctrl panel has been redrawn to allow for nouislider
+4b - add a continuous option
+4c - add a frequency slider
+4d - make the straight line have variable end heights
+4e - the straight line can change exponentially
 5 - Add load / save capability. Show the code
 6 - Download as PNG option
 7 - make undo and redo work

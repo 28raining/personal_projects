@@ -100,9 +100,12 @@ function add_brick(id) {
 function add_annotation(id) {
   if (id == "brick_title") {
     var row = timing_diagram.selected_row;
-    timing_diagram.diagram[row].title = 'pacccc';
-    timing_diagram.diagram[row].title_height = 20;
-    timing_diagram.total_height += timing_diagram.diagram[row].title_height;
+    if(timing_diagram.diagram[row].title_height == 0) {
+      timing_diagram.diagram[row].title = 'pacccc';
+      timing_diagram.diagram[row].title_height = 20;
+      timing_diagram.total_height += timing_diagram.diagram[row].title_height;
+      draw_control_panel('titleSel_'+row);
+    }
   } else {
     timing_diagram.annotations.push({
       type: id,
@@ -276,6 +279,7 @@ function dec_sel() {
   if      (sel_id[0] == 'b') return ['b',sel_id[1],sel_id[2]];
   else if (sel_id[0] == 'a') return ['a',sel_id[1],0];
   else if (sel_id[0] == 'arr') return ['arr',sel_id[1],0];
+  else if (sel_id[0] == 'title') return ['title',sel_id[1],0];
   else return [null,0,0];
 }
 
@@ -302,7 +306,7 @@ function sel_brick(id) {
 }
 
 function clicked_trash() {
-  var sel_type = dec_sel()[0]
+  var sel_type = dec_sel()[0];
   if (sel_type == 'b') {
     var row= dec_sel()[1];
     var col= dec_sel()[2];
@@ -326,6 +330,12 @@ function clicked_trash() {
     timing_diagram.selected_item = "";
     draw_control_panel("trash");
     redraw_svg();
+  } else if (sel_type == 'title') {
+    timing_diagram.total_height -= timing_diagram.diagram[dec_sel()[1]].title_height;
+    timing_diagram.diagram[dec_sel()[1]].title_height = 0;
+    timing_diagram.selected_item = "";
+    draw_control_panel("trash");
+    redraw_svg();
   }
 }
 
@@ -333,33 +343,42 @@ function clicked_trash() {
 function draw_control_panel(info) {
   var content;
   var split_info = info.split('_');
-  if ((split_info[0]=="annotation") || (split_info[0]=="drag")) {
-    timing_diagram.selected_item = 'a_'+split_info[1];
-    content = '<p>Annotation name...</p>';
-    content += '<input type="text" value="'+timing_diagram.annotations[split_info[1]].text+'" onchange="update_ann_text('+split_info[1]+',this.value)"></input>';
-    timing_diagram.sele
-  } else if (split_info[0] == "arrow") {
-    timing_diagram.selected_item = 'arr_'+split_info[1];
-    content = control_panel_arrow(split_info[1])
-  } else if (split_info[0] == "rowSel") {
-    content = '<p>Chose a row name...</p>';
-    content += '<input type="text" value="'+timing_diagram.diagram[timing_diagram.selected_row].label_name+'" onchange="update_row_label(this.value)"></input>';
-  } else if (split_info[0] == "titleSel") {
-    content = '<p>Chose the title...</p>';
-    content += '<input type="text" value="{0}" onchange="update_row_title(this.value,{1})"></input>'.format(timing_diagram.diagram[split_info[1]].title,split_info[1]);
-  } else if (timing_diagram.selected_item == "") {
-    content = '<p>Click an element to modify it...</p>';
-  } else {
-    var row = dec_sel()[1];
-    var col = dec_sel()[2];
-    var type = timing_diagram.diagram[row].shapes[col].split('__');
-    switch (type[0]) {
-      case "brick_clk":
-        content = control_panel_brick(type[1]) 
-      break;
+  if (split_info[0]=="brick") {
+    if (timing_diagram.selected_item == "") {
+      document.getElementById("control_panel").innerHTML = '<p>Click an element to modify it...</p>';
+    } else {
+      var row = dec_sel()[1];
+      var col = dec_sel()[2];
+      var type = timing_diagram.diagram[row].shapes[col].split('__');
+      switch (type[0]) {
+        case "brick_clk":
+          content = control_panel_brick(type[1]);
+        case "brick_sine":
+          content = control_panel_sine(type[1]) 
+        break;
+      }
+      document.getElementById("control_panel").innerHTML = content;
+      //Now draw the sliders
     }
+  } else {
+    if ((split_info[0]=="annotation") || (split_info[0]=="drag")) {
+      timing_diagram.selected_item = 'a_'+split_info[1];
+      content = '<p>Annotation name...</p>';
+      content += '<input type="text" value="'+timing_diagram.annotations[split_info[1]].text+'" onchange="update_ann_text('+split_info[1]+',this.value)"></input>';
+      //timing_diagram.sele
+    } else if (split_info[0] == "arrow") {
+      timing_diagram.selected_item = 'arr_'+split_info[1];
+      content = control_panel_arrow(split_info[1])
+    } else if (split_info[0] == "rowSel") {
+      content = '<p>Chose a row name...</p>';
+      content += '<input type="text" value="'+timing_diagram.diagram[timing_diagram.selected_row].label_name+'" onchange="update_row_label(this.value)"></input>';
+    } else if (split_info[0] == "titleSel") {
+      content = '<p>Chose the title...</p>';
+      content += '<input type="text" value="{0}" onchange="update_row_title(this.value,{1})"></input>'.format(timing_diagram.diagram[split_info[1]].title,split_info[1]);
+      timing_diagram.selected_item = "title_"+split_info[1];
+    }
+    document.getElementById("control_panel").innerHTML = content;
   }
-  document.getElementById("control_panel").innerHTML = content;
 }
 
 //save the label name then measure the width of the label box and resize the SVG so the label fits
@@ -452,6 +471,21 @@ function control_panel_brick(num){
     checked = num==i ? 'checked="checked"' : '';
     content += '<div class="brick_changer"><input type="radio" onclick="update_brick(this.value)" name="sel" value="'+i+'" '+checked+'><svg viewBox="0 0 64 38"><path d="M 0 1 '+brick_to_path(array_of_svg["brick_clk__"+i+""])+'"></path></svg></div>';
   }
+  return content;
+}
+
+function control_panel_sine(num){
+  var content="";
+  var slider = document.getElementById('slider');
+
+  noUiSlider.create(slider, {
+      start: [80],
+      range: {
+          'min': [0],
+          'max': [100]
+      }
+  });
+
   return content;
 }
 
@@ -748,4 +782,12 @@ function initialise() {
   draw_selectable_bricks();
   draw_control_panel('initial');
   redraw_svg();
+}
+
+function to_canv() {
+  var inner = document.getElementById('main_svg').innerHTML;
+  var svg = document.getElementById('main_svg');
+  var serializer = new XMLSerializer();
+  var svgString = serializer.serializeToString(svg);
+  canvg(document.getElementById('canvas'), svgString)
 }
