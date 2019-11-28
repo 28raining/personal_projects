@@ -231,7 +231,7 @@
 }
 
 .brick_selected {
-	fill : rgba(44, 62, 80, 0.33);
+	fill : rgba(44, 62, 80, 0.15);
 }
 
 #canvas_labels {
@@ -450,5 +450,33 @@
 
 .title_background {
 	fill : rgba(255, 255, 255, 0.8);
+}
+
+.slider {
+	width: 350px;
+	height:40px;
+	display:block;
+}
+
+.slider .slider_text {
+	width: 90px;
+	display:inline-block;
+}
+
+.slider .slider_slider {
+	width:200px;
+	margin:10px;
+	display:inline-block;
+}
+
+.slider input {
+	width:30px;
+	height:20px;
+	display:inline-block;
+	margin-top: 10px;
+	margin-bottom: 10px;
+	margin-left: 5px;
+	margin-right: 5px;
+	vertical-align:top;
 }
 
